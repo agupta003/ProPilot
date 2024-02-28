@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd" >
+<beans>
+
+
+	<bean id="driverManagerDataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="url">
+			<value>jdbc:mysql://localhost:3306/training</value>
+		</property>
+		<property name="username">
+			<value>training</value>
+		</property>
+		<property name="password">
+			<value>training</value>
+		</property>
+	</bean>
+
+
+	<bean name="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<!--
+				You can configure any datasource like jndi or dbcp.See
+				jdbcSupport.xml to know how different types of data sources can be
+				configured
+			-->
+			<ref bean="driverManagerDataSource" />
+		</property>
+
+		<!--
+			You can configure the location of hibernate.cfg.xml file as follows
+		-->
+		<!--
+			<property name="configLocation" value="file:src/hibernate.cfg.xml">
+			</property>
+		-->
+		<!--
+			OR ELSE You can configure the properties that you use to configure in
+			hibernate.cfg.xml file, right here
+		-->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+
+		<!--  this is how you can configure the .hbm.xml files -->
+		<property name="mappingResources">
+			<list>
+				<value>com/itservicesone/training/spring/model/Customer.hbm.xml</value>
+			</list>
+		</property>
+
+		<!--
+			The best way to configure all .hbm.xml files at once is as follows
+		-->
+		<!--  You can have more than one locations specified  -->
+		<!--
+			<property name="mappingDirectoryLocations"> <list>
+
+			<value>classpath:/com/itservicesone/training/spring/model</value>
+			</list> </property>
+		-->
+	</bean>
+
+	<bean name="hibernateTemplate" class=" org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+
+	</bean>
+
+	<bean id="customerDAOWithTransaction"
+		class="com.itservicesone.training.spring.model.CustomerDAOWithTransaction">
+		<property name="hibernateTemplate">
+			<ref bean="hibernateTemplate" />
+		</property>
+		<property name="transactionTemplate">
+			<ref bean="transactionTemplate" />
+		</property>
+	</bean>
+
+
+	<!--
+		If you want to use TransactionManager for plain jdbc, then declare the
+		datasource has explained in previous tutorial and declare the
+		Transaction Manager as follows
+	-->
+	<bean id="jdbcTransactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource">
+			<ref bean="driverManagerDataSource" />
+		</property>
+
+	</bean>
+
+	<!--
+		If you need to configure a JTA Transaction Manager then this is how
+		will do it. value is the jndi name of your UserTransaction in
+		Application Server
+	-->
+	<!--
+		<bean name="jtaTransactionManager"
+		class="org.springframework.transaction.jta.JtaTransactionManager">
+		<property name="transactionManagerName">
+
+		<value>java:/UserTransaction</value> </property> </bean>
+	-->
+	<!--
+		Following is the mechanism to configure Hibernate Transaction Manager
+	-->
+	<bean name="hibernateTransactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+
+
+	<bean name="transactionTemplate"
+		class="org.springframework.transaction.support.TransactionTemplate">
+		<property name="transactionManager">
+			<ref bean="hibernateTransactionManager" />
+		</property>
+	</bean>
+
+
+	<bean id="customerServiceWithTransactionTarget"
+		class="com.itservicesone.training.spring.businessservices.CustomerServiceWithTransaction">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+
+
+	<bean id="myTransactionAttributes"
+		class="org.springframework.transaction.interceptor.DefaultTransactionAttribute">
+		<property name="propagationBehaviorName">
+			<value>PROPAGATION_REQUIRED</value>
+		</property>
+
+		<property name="isolationLevelName">
+			<value>ISOLATION_REPEATABLE_READ</value>
+		</property>
+	</bean>
+	<!--
+		Note that MatchAlwaysTransactionAttributeSource will match all methods
+		i.e. all methods of the target will be applied with the behavior
+		described by this bean
+	-->
+	<bean id="attributeSource"
+		class="org.springframework.transaction.interceptor.MatchAlwaysTransactionAttributeSource">
+		<property name="transactionAttribute">
+			<ref bean="myTransactionAttributes" />
+		</property>
+
+	</bean>
+
+	<bean id="transactionalCustomerService"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<list>
+				<value>com.itservicesone.training.spring.businessservices.ICustomerServiceWithTransaction</value>
+			</list>
+		</property>
+		<property name="target">
+			<ref bean="customerServiceWithTransactionTarget" />
+		</property>
+
+		<property name="transactionManager">
+			<ref bean="hibernateTransactionManager" />
+		</property>
+
+		<property name="transactionAttributeSource">
+			<ref bean="attributeSource" />
+		</property>
+
+	</bean>
+
+	<bean id="namedTransactionAttributeSource"
+		class="org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource">
+
+		<property name="properties">
+			<props>
+				<prop key="read">PROPAGATION_REQUIRED,ISOLATION_REPEATABLE_READ,readOnly</prop>
+			</props>
+		</property>
+
+		<!--
+			Note the use of wildcard character "*" to specify that all the
+			methods starting with update and followed by anything will adhere to
+			transaction mechanics declared here
+		-->
+		<!--
+			<property name="properties"> <props> <prop
+			key="update*">PROPAGATION_REQUIRED,ISOLATION_REPEATABLE_READ,-CustomerUpdateException</prop>
+			</props> </property>
+		-->
+	</bean>
+
+
+
+</beans>

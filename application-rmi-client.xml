@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd" >
+<beans>
+	<!--
+		RmiProxyFactoryBean is the classic example of Remote Proxy (one of the
+		usages of GOF Proxy Design Pattern)
+	-->
+	<bean id="calendarServiceClient" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+		<property name="serviceUrl">
+			<value>rmi://localhost:1099/CalendarService</value>
+		</property>
+		<property name="serviceInterface">
+			<value>com.itservicesone.training.spring.s9.topic1.remoting.ICalendarService</value>
+		</property>
+	</bean>
+	<bean id="bookingService"
+		class="com.itservicesone.training.spring.s9.topic1.remoting.BookingService">
+
+		<property name="calendarService">
+			<ref bean="calendarServiceClient" />
+		</property>
+
+	</bean>
+</beans>

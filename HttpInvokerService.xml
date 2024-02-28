@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<example>
+	<!--  A dummy config of HttpInvokerService -->
+	<!--  Exposing HttpInvokerService -->
+	<bean id="httpPaymentService"
+		class="org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter">
+		<property name="service">
+			<!--
+				Reference to simple Spring-Managed Bean that needs to be exposed
+				using HttpInvokerService
+			-->
+			<ref bean="paymentService" />
+		</property>
+		<property name="serviceInterface">
+			<value>dummypackage.PaymentService</value>
+		</property>
+	</bean>
+
+	<bean id="urlMapping"
+		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="mappings">
+			<props>
+				<prop key="/pay.service">httpPaymentService</prop>
+			</props>
+		</property>
+
+	</bean>
+
+	<!-- Following in web.xml -->
+	<servlet>
+		<servlet-name>credit</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>credit</servlet-name>
+		<url-pattern>*.service</url-pattern>
+	</servlet-mapping>
+
+
+	<!--  Following is the config in client application -->
+	<!-- This bean can then be injected in any other spring managed bean -->
+	<bean id="paymentService"
+		class="org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean">
+		<property name="serviceURL">
+			<value>http://localhost:8080/springifiedWebApp/pay.service
+			</value>
+		</property>
+		<property name="serviceInterface">
+			<value>dummypackage.PaymentService</value>
+		</property>
+
+	</bean>
+
+
+
+</example>

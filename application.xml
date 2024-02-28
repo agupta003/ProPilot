@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd" >
+<beans>
+
+
+
+	<!--  s1.topic1.simpleioc -->
+	<bean id="helloWorldService"
+		class="com.itservicesone.training.spring.s1.topic1.simpleioc.HelloWorldServiceImpl">
+		<property name="message">
+			<value>Hello World!</value>
+		</property>
+		<property name="number">
+		  <value>25</value>
+		</property>
+
+	</bean>
+	
+	
+	<bean name="serviceOrder" class="com.itservicesone.training.spring.model.ServiceOrder"></bean>
+
+
+	<!--  s1.topic2: simpleaop -->
+
+	<bean id="theAdvice"
+		class="com.itservicesone.training.spring.s1.topic2.simpleaop.TheAdvice"></bean>
+
+	<bean id="targetImpl"
+		class="com.itservicesone.training.spring.s1.topic2.simpleaop.TheTarget" />
+
+	<bean id="target" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<list>
+				<value>com.itservicesone.training.spring.s1.topic2.simpleaop.TheTargetInterface</value>
+			</list>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>theAdvice</value>
+			</list>
+		</property>
+		<property name="target">
+			<ref bean="targetImpl" />
+		</property>
+
+	</bean>
+
+
+	<!--  s2.topic2: basicwiring -->
+	<bean id="customerDAO" class="com.itservicesone.training.spring.model.CustomerDAO">
+
+		<!-- Wiring Collections -->
+		<property name="customerTypes">
+			<list>
+				<value>Upcountry</value>
+				<value>Local</value>
+				<value>Export</value>
+				<!--
+					Instead of value you can also use ref to refer to some other bean
+				-->
+			</list>
+		</property>
+
+		<property name="customerTypesMap">
+
+			<map>
+				<entry>
+					<key>
+						<value>U</value>
+					</key>
+					<value>Upcountry</value>
+				</entry>
+				<entry>
+					<key>
+						<value>L</value>
+					</key>
+					<value>Local</value>
+				</entry>
+				<entry key="E">
+					<!--
+						Instead of value you can also use ref to refer to some other bean
+					-->
+					<value>Export</value>
+				</entry>
+
+			</map>
+		</property>
+
+		<!--  Can have only String Entries -->
+		<property name="customerTypesProps">
+			<props>
+				<prop key="U">UpCountry</prop>
+				<prop key="L">Local</prop>
+				<prop key="E">Export</prop>
+			</props>
+
+		</property>
+
+	</bean>
+
+	<!--   -->
+	<bean id="customerService" singleton="true"
+		class="com.itservicesone.training.spring.businessservices.CustomerService">
+
+		<property name="customerDAO">
+			<ref bean="customerDAO" />
+		</property>
+	</bean>
+
+	<!-- Illustrating init-method and destroy-method & Inner Beans -->
+	<bean id="taxManager"
+		class="com.itservicesone.training.spring.businessservices.TaxManager"
+		init-method="init" destroy-method="configuredDestroy">
+
+		<!-- Inner Beans -->
+		<property name="auditManager">
+			<bean
+				class="com.itservicesone.training.spring.businessservices.TaxAuditManager">
+			</bean>
+		</property>
+
+	</bean>
+
+
+	<!-- s2.topic3: Wiring through Constructors -->
+	<bean id="productDAO" class="com.itservicesone.training.spring.model.ProductDAO" />
+
+	<bean id="productService"
+		class="com.itservicesone.training.spring.businessservices.ProductService">
+		<!--
+			index can be used to resolve ambiguity if the constructor has two
+			argument of same data type.
+		-->
+		<constructor-arg index="0">
+			<ref bean="productDAO" />
+		</constructor-arg>
+	</bean>
+
+	<!--  s2.topic5: Illustrating AutoWiring-->
+
+	<!-- byName -->
+	<bean id="orderDAO" class="com.itservicesone.training.spring.model.OrderDAO" />
+
+	<bean id="orderService"
+		class="com.itservicesone.training.spring.businessservices.OrderService"
+		autowire="byName">
+
+	</bean>
+
+
+	<!-- constructor -->
+	<bean id="invoiceDAO" class="com.itservicesone.training.spring.model.InvoiceDAO" />
+
+
+
+	<bean id="invoiceService"
+		class="com.itservicesone.training.spring.businessservices.InvoiceService"
+		autowire="autodetect" />
+	<!--
+		If the following bean definition is uncommented, spring will throw
+		UnsatisfiedDependencyException because there will be ambguity : there
+		are two beans defined which are of type InvoiceDAO and the constructor
+		takes argument of this type in InvoiceService. Note that the autowire
+		is constructor
+	-->
+	<!--
+		<bean id="invoiceDAO1"
+		class="com.itservicesone.training.spring.model.InvoiceDAO" />
+	-->
+
+
+
+	<!--  s3.topic1: Illustrates BeanPostProcessor -->
+	<bean id="myBeanPostProcessor"
+		class="com.itservicesone.training.spring.s3.topic1.beanpostprocessors.MyBeanPostProcessor" />
+
+	<!--  Illustrates BeanFactoryPostProcessor s3.topic2 -->
+	<bean id="myBeanFactoryPostProcessor"
+		class="com.itservicesone.training.spring.s3.topic2.beanfactorypostprocessors.MyBeanFactoryPostProcessor" />
+
+
+	<!--
+		s3.topic3 : Illustrates Externalizing the Configuration &
+		PropertyEditors
+	-->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>jdbc.properties</value>
+		</property>
+		<!-- use locations as property to define multiple files -->
+	</bean>
+	<bean id="genericDAO" class="com.itservicesone.training.spring.model.GenericDAO">
+
+		<property name="driver">
+			<value>${database.driver}</value>
+		</property>
+		<!--
+			Following property will be converted to java.net.URL by URLEditor of
+			Spring as the datatype of this property in GenericDAO is java.net.URL
+		-->
+		<property name="theURL">
+			<value>http://www.muhammedshakir.com</value>
+		</property>
+		<!--
+			Following property will be converted to String Array by
+			StringArrayPropertyEditor of Spring
+		-->
+		<property name="credentials">
+			<value>shakir, shakirpassword</value>
+		</property>
+	</bean>
+
+	<!--  s3.topic4 : Custom Property Editor -->
+	<bean id="customEditorConfigurer"
+		class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+		<property name="customEditors">
+			<map>
+			    <!--  Key is important and must be the fully qualified Class Name -->
+				<entry key="com.itservicesone.training.spring.model.PaperDescription">
+					<!--
+						Classic example of using inner beans. Note that this bean will
+						never be needed out the scope of this editor
+					-->
+					<bean id="paperDescriptionEditor"
+						class="com.itservicesone.training.spring.s3.topic4.propertyeditors.PaperDescriptionEditor" />
+				</entry>
+			</map>
+		</property>
+	</bean>
+	<bean id="paperPurchaseDAO"
+		class="com.itservicesone.training.spring.model.PaperPurchaseDAO">
+		<!-- The datatype of this property as same as key in the map entry in customEdtitos (see above bean def) -->
+		<property name="defaultPaperDescription">
+			<value>52-23X36</value>
+		</property>
+	</bean>
+
+	<!--  s4.topic1: Mesasge Resources -->
+	<!--
+		id must be messageSource. This is the bean that Spring will search for
+	-->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basename">
+			<value>ApplicationMessages</value>
+		</property>
+
+	</bean>
+
+	<!-- s4.topic2: events -->
+	<bean id="appEventReceiver"
+		class="com.itservicesone.training.spring.s4.topic2.events.ApplicationEventReceivingBean" />
+
+
+	<!-- s5.topic1: springaop -->
+	<bean id="myLoggingAdvice"
+		class="com.itservicesone.training.spring.s5.topic1.springaop.MyLoggingBeforeAdvice" />
+
+	<bean id="myTransactionManager"
+		class="com.itservicesone.training.spring.s5.topic1.springaop.MyTransactionManager" />
+
+	<bean id="advisedGenericDAO" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<value>com.itservicesone.training.spring.model.IGenericDAO</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>myLoggingAdvice</value>
+				<value>myTransactionManager</value>
+			</list>
+		</property>
+
+		<property name="target">
+			<ref bean="genericDAO" />
+		</property>
+	</bean>
+
+	<!-- s5.topic1 : springaop (Throws Advice) -->
+	<bean id="myThrowsAdvice"
+		class="com.itservicesone.training.spring.s5.topic1.springaop.MyThrowsAdvice" />
+	<bean id="advisedSecurityService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<value>com.itservicesone.training.spring.s5.topic1.springaop.ISecurityService</value>
+		</property>
+		<property name="interceptorNames">
+			<value>myThrowsAdvice</value>
+		</property>
+		<property name="target">
+			<bean id="theTarget"
+				class="com.itservicesone.training.spring.s5.topic1.springaop.MySecurityService" />
+		</property>
+	</bean>
+
+
+
+
+</beans>

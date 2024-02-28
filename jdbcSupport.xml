@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd" >
+<beans>
+
+	<!-- s6.topic1: JDBC Support -->
+
+	<bean id="driverManagerDataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="url">
+			<value>jdbc:mysql://localhost:3306/training</value>
+		</property>
+		<property name="username">
+			<value>training</value>
+		</property>
+		<property name="password">
+			<value>training</value>
+		</property>
+	</bean>
+
+	<!--
+		You need to have dbcp jars in classpath. Note that we are not using
+		this in our application and hence set lazy-init=true so that it does
+		not initialize eagerly when container starts. Getting this bean will
+		throw exception as the jar file is not there in classpath
+	-->
+	<bean id="dbCPDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		lazy-init="true">
+		<property name="driver">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<!-- Rest all properties as above -->
+	</bean>
+
+	<!--
+		If this application is running on application server that provides
+		data sources through jndi then this is how you will configure it to be
+		used with spring managed beans. Note that if you turn lazy-init to
+		true, container will fail to initialize as it will try to look for the
+		jndi resource where as this is a standalone app that has no access to
+		any jndi
+	-->
+	<bean id="jndiDataSource" class="org.springframework.jndi.JndiObjectFactoryBean"
+		lazy-init="true">
+		<property name="jndiName">
+			<value>java:MySQLDS</value>
+		</property>
+	</bean>
+
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource">
+			<ref bean="driverManagerDataSource" />
+		</property>
+	</bean>
+
+	<bean id="billingRateDAO" class="com.itservicesone.training.spring.model.BillingRateDAO">
+		<property name="jdbcTemplate">
+			<ref bean="jdbcTemplate" />
+		</property>
+	</bean>
+
+</beans>

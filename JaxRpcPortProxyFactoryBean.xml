@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+	<bean id="billingRateService"
+		class="org.springframework.remoting.jaxrpc.JaxRpcPortProxyFactoryBean">
+		<property name="wsdlDocumentUrl">
+			<value>http://localhost:8080/axis/BillingRateService
+			</value>
+		</property>
+
+		<property name="serviceInterface">
+			<value>
+				com.itservicesone.training.spring.s9.topic1.remoting.IBillingRateService
+			</value>
+		</property>
+		<property name="portInterface">
+			<value>
+				com.itservicesone.training.spring.s9.topic1.remoting.IBillingRateService
+			</value>
+		</property>
+
+		<property name="nameSpaceUri">
+			<value>http://localhost:8080/axis/BillingRateService.wsdl
+			</value>
+		</property>
+
+		<property name="serviceName">
+			<value>BillingRateService</value>
+		</property>
+
+		<property name="portName">
+			<value>getRate</value>
+		</property>
+
+		<property name="serviceFactoryClass">
+			<value>org.apache.axis.client.ServiceFactory
+			</value>
+		</property>
+
+	</bean>
+
+
+</beans>
